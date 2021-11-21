@@ -1,45 +1,44 @@
-// const router = require("express").Router();
+const express = require('express')
 const router = new express.Router()
 const Post = require("../models/post");
 
 //CREATE POST
-router.post("/", async (req, res) => {
-  const newPost = new Post(req.body);
+router.post("/posts", async (req, res) => {
+  const post = new Post(req.body);
+
   try {
-    const savedPost = await newPost.save();
-    res.status(200).json(savedPost);
-  } catch (err) {
-    res.status(500).json(err);
+    await post.save()
+  } catch(e){
+    res.status(400).send(e)
   }
 });
 
 //UPDATE POST
-router.put("/:id", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (post.username === req.body.username) {
-      try {
-        const updatedPost = await Post.findByIdAndUpdate(
-          req.params.id,
-          {
-            $set: req.body,
-          },
-          { new: true }
-        );
-        res.status(200).json(updatedPost);
-      } catch (err) {
-        res.status(500).json(err);
-      }
-    } else {
-      res.status(401).json("You can update only your post!");
+router.patch("/posts/:id", async (req, res) => {
+
+    const updates = Object.keys(req.body)
+    const allowUpdates = ['title', 'description', 'photo', 'usernamne', 'categories']
+    const isValidOperation = updates.every((update)=> allowUpdates.includes(update))
+
+    if (!isValidOperation){
+      return res.status(400).send({error: 'Invalid updates!'})
     }
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
+
+    try {
+      const post = await Post.findById(req.params.id)
+      updates.forEach((update)=> post[update] = req.body[update])
+      await post.save()
+      if (!post ){
+        return res.status(404).send()
+      }
+      res.send(post)
+    } catch (e) {
+      res.status(400).send(e)
+    }
+  });
 
 //DELETE POST
-router.delete("/:id", async (req, res) => {
+router.delete("/posts/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (post.username === req.body.username) {
@@ -58,7 +57,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 //GET POST
-router.get("/:id", async (req, res) => {
+router.get("/posts/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     res.status(200).json(post);
@@ -68,7 +67,7 @@ router.get("/:id", async (req, res) => {
 });
 
 //GET ALL POSTS
-router.get("/", async (req, res) => {
+router.get("/posts", async (req, res) => {
   const username = req.query.user;
   const catName = req.query.cat;
   try {

@@ -7,7 +7,7 @@ const PostSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    desc: {
+    description: {
       type: String,
       required: true,
     },
@@ -23,8 +23,7 @@ const PostSchema = new mongoose.Schema(
       type: Array,
       required: false,
     },
-  },
-  { timestamps: true }
+  }
 );
 
 module.exports = mongoose.model("Post", PostSchema);
